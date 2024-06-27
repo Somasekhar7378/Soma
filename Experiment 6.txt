@@ -1,0 +1,65 @@
+Experiment 6
+
+from itertools import combinations
+
+def generate_candidates(prev_candidates, k):
+    candidates = set()
+    for itemset1 in prev_candidates:
+        for itemset2 in prev_candidates:
+            if len(itemset1.union(itemset2)) == k:
+                candidates.add(itemset1.union(itemset2))
+    return candidates
+
+def prune_candidates(candidates, prev_frequent_itemsets, k):
+    pruned_candidates = set()
+    for candidate in candidates:
+        subsets = combinations(candidate, k - 1)
+        is_valid = True
+        for subset in subsets:
+            if frozenset(subset) not in prev_frequent_itemsets:
+                is_valid = False
+                break
+        if is_valid:
+            pruned_candidates.add(candidate)
+    return pruned_candidates
+
+def support_count(transactions, itemset):
+    count = 0
+    for transaction in transactions:
+        if itemset.issubset(transaction):
+            count += 1
+    return count
+
+def apriori(transactions, min_support):
+    frequent_itemsets = []
+    k = 1
+    items = set(item for transaction in transactions for item in transaction)
+    candidates = [{item} for item in items]
+    while candidates:
+        frequent_itemsets_at_k = []
+        for candidate in candidates:
+            support = support_count(transactions, candidate) / len(transactions)
+            if support >= min_support:
+                frequent_itemsets_at_k.append(candidate)
+                print(f"Support of {candidate}: {support:.2f}")
+        frequent_itemsets.extend(frequent_itemsets_at_k)
+        k += 1
+        candidates = generate_candidates(set.union(*frequent_itemsets_at_k), k)
+        candidates = prune_candidates(candidates, frequent_itemsets_at_k, k)
+    return frequent_itemsets
+
+# Example usage:
+transactions = [
+    {'milk', 'bread', 'butter'},
+    {'milk', 'bread'},
+    {'milk', 'butter'},
+    {'milk', 'bread', 'butter'},
+    {'coffee', 'ugar'},
+    {'coffee', 'bread', 'ugar'},
+    {'coffee', 'bread'},
+]
+min_support = 0.4
+print("Frequent Itemsets:")
+frequent_itemsets = apriori(transactions, min_support)
+for itemset in frequent_itemsets:
+    print(itemset)
