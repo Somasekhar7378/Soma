@@ -1,2 +1,1 @@
-# Soma
-About hospital management 
+
